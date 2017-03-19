@@ -3,12 +3,9 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import and_
 
-roleuser = db.Table('roleuser',
-                    db.Column('user_id', db.Integer,
-                              db.ForeignKey('users.id')),
-                    db.Column('role_id', db.String, db.ForeignKey('roles.id'))
-                    )
-
+roleuser = db.Table('roleuser',db.Column('user_id', db.Integer,
+                    db.ForeignKey('users.id')),
+                    db.Column('role_id', db.String, db.ForeignKey('roles.id')))
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -111,7 +108,18 @@ class Resource(db.Model):
     def __repr__(self):
         return '<Resource %r>' % (self.name)
 
+class RequestLog(db.Model):
+    __tablename__ = 'request_log'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    res_id = db.Column(db.Integer, db.ForeignKey('resources.id'))
+    reason = db.Column(db.String(64))
+    timestamp = db.Column(db.Integer)
+    is_granted = db.Column(db.Integer)
 
+    def __repr__(self):
+        return '<Resource %r>' % (self.name)
+    
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
