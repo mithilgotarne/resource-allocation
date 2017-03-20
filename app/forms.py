@@ -27,6 +27,7 @@ class RegistrationForm(Form):
 
 class ResourceForm(Form):
     name = StringField('name', validators=[InputRequired(message='Name field cannot be left blank')])
+    quantity = StringField('quantity', validators=[InputRequired(message='Quantity field cannot be left blank')])
 
 class RoleForm(Form):
     name = StringField('name', validators=[InputRequired(message='Name field cannot be left blank')])

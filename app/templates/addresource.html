@@ -8,6 +8,10 @@
         <label for="name" class="sr-only">Resource Name</label>
         {{ form.name(class="form-control", placeholder="Name", style="margin-bottom: 5px;") }}
 
+        <label for="quantity" class="sr-only">Quantity</label>
+        {{ form.quantity(class="form-control", placeholder="Quantity", style="margin-bottom: 5px;") }}
+
+
         <div style="text-align: center; color: #CC0000;">
             {% for field, errors in form.errors.items() %}
             {% for error in errors %}

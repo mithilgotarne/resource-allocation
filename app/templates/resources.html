@@ -11,12 +11,14 @@
         <tr>
             <th>Resource ID</th>
             <th>Resource Name</th>
+            <th>Quantity</th>
             <th align="right"></th>
         </tr>
         {% for resource in all_resources %}
         <tr>
             <td>{{ resource.id }}</td>
             <td>{{ resource.name }}</td>
+            <td>{{ resource.quantity }}</td>
             <td align="right">
                 <div class="btn-group" role="group">
                     <a href="{{ url_for('editresource', resid=resource.id) }}" role="button" class="btn btn-warning btn-md">Edit</a>

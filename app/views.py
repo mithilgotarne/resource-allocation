@@ -32,7 +32,7 @@ def index():
 
 
 # Users
-@app.route('/users', methods=['GET', 'POST'])
+@app.route('/users/', methods=['GET', 'POST'])
 def users():
     users = User.query.all()
     all_roles = Role.query.all()
@@ -134,7 +134,7 @@ def addresource():
     form = ResourceForm()
     g.myerror = ""
     if form.validate_on_submit():
-        r = Resource(name=form.name.data)
+        r = Resource(name=form.name.data, quantity=form.quantity.data)
         db.session.add(r)
         db.session.commit()
         return redirect(url_for('resources'))
@@ -151,6 +151,7 @@ def editresource(resid):
     else:
         if form.validate_on_submit():
             cur_res.name = form.name.data
+            cur_res.quantity = form.quantity.data
             db.session.commit()
             return redirect(url_for('resources'))
         return render_template('addresource.html', title="Edit Resource", form=form, isedit=True, res=cur_res)

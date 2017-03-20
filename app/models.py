@@ -104,6 +104,7 @@ class Resource(db.Model):
     __tablename__ = 'resources'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True)
+    quantity = db.Column(db.Integer, default=0)
 
     def __repr__(self):
         return '<Resource %r>' % (self.name)
@@ -118,7 +119,7 @@ class RequestLog(db.Model):
     is_granted = db.Column(db.Integer)
 
     def __repr__(self):
-        return '<Resource %r>' % (self.name)
+        return '<Request %r>' % (self.name)
     
 @login_manager.user_loader
 def load_user(user_id):
