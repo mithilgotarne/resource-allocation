@@ -10,13 +10,15 @@ selected_roles = list()
 @app.route('/')
 @app.route('/index', methods=['GET', 'POST'])
 def index():
+    if not g.user.is_authenticated:
+        return redirect(url_for('login'))
     form = AccessForm()
     all_users = User.query.all()
     all_res = Resource.query.all()
     form.users.choices = [(str(x.id), str(x.name)) for x in all_users]
     form.resources.choices = [(str(x.id), str(x.name)) for x in all_res]
-    form.actions.choices = [(str(ActionType.READ), "Read"), (str(ActionType.WRITE), "Write"),
-                            (str(ActionType.DELETE), "Delete")]
+    form.actions.choices = [(str(ActionType.ACCESS), "Read"), (str(ActionType.GRANT), "Write"),
+                            (str(ActionType.MODIFY), "Delete")]
     isempty = False
     if len(all_res) == 0 or len(all_users) == 0:
         isempty = True
@@ -33,7 +35,9 @@ def index():
 
 # Users
 @app.route('/users', methods=['GET', 'POST'])
+@login_required
 def users():
+    check_admin()
     users = User.query.all()
     all_roles = Role.query.all()
     return render_template('users.html', title="Users", users=users, allroles=all_roles)
@@ -44,19 +48,19 @@ def newuser():
     form = NewUserForm()
     g.myerror = ""
     if form.validate_on_submit():
+        temp = Role.query.filter_by(id=int(form.role.data)).first()
         u = User(name=form.name.data, email=form.email.data)
         u.password = form.password.data
-        flash(form.role.data)
-        temp = Role.query.filter_by(id=int(form.role.data)).first()
-        db.session.add(u)
-        u.set_role(temp)
-        db.session.commit()
         checkuser = User.query.filter_by(email=form.email.data).first()
         if checkuser is None:
             #db.session.commit()
-            flash('Registration Successful')
-            flash(form.role.data)
-            return redirect(url_for('users'))
+            u.set_role(temp)
+            db.session.add(u)
+            db.session.commit()
+            if g.user.isadmin:
+                return redirect(url_for('users'))
+            else:
+                return redirect(url_for('login'))
         else:
             g.myerror = "This user already exists"
     return render_template('newuser.html', form=form)
@@ -81,6 +85,7 @@ def registration():
     return render_template('registration.html', title="Add User", form=form)
 
 
+@login_required
 @app.route('/edituser/<userid>', methods=['GET', 'POST'])
 def edituser(userid):
     form = RegistrationForm()
@@ -121,6 +126,7 @@ def edituser(userid):
 
 
 @app.route('/deleteuser/<userid>', methods=['GET', 'POST'])
+@login_required
 def deleteuser(userid):
     userid = int(userid)
     cur_user = User.query.filter_by(id=userid).first()
@@ -183,49 +189,6 @@ def roles():
 
     return render_template('roles.html', title="Roles", all_roles=all_roles, all_res=all_res)
 
-
-@app.route('/addrole', methods=['GET', 'POST'])
-def addrole():
-    form = RoleForm()
-    g.myerror = ""
-    all_res = Resource.query.all()
-    form.read_resources.choices = [(str(x.id), str(ActionType.READ)) for x in all_res]
-    form.write_resources.choices = [(str(x.id), str(ActionType.WRITE)) for x in all_res]
-    form.delete_resources.choices = [(str(x.id), str(ActionType.DELETE)) for x in all_res]
-
-    if form.validate_on_submit():
-        if Role.query.filter_by(name=form.name.data).first() is None:
-            r = Role(name=form.name.data)
-            db.session.add(r)
-            my_res_act_map = dict()
-            for res in all_res:
-                my_res_act_map[res] = 0
-
-            for chk in form.read_resources:
-                if chk.checked:
-                    tmp = Resource.query.filter_by(id=int(chk.data)).first()
-                    my_res_act_map[tmp] |= ActionType.READ
-            for chk in form.write_resources:
-                if chk.checked:
-                    tmp = Resource.query.filter_by(id=int(chk.data)).first()
-                    my_res_act_map[tmp] |= ActionType.WRITE
-
-            for chk in form.delete_resources:
-                if chk.checked:
-                    tmp = Resource.query.filter_by(id=int(chk.data)).first()
-                    my_res_act_map[tmp] |= ActionType.DELETE
-
-            for res in my_res_act_map:
-                if my_res_act_map[res] != 0:
-                    r.change_resource_map(res, my_res_act_map[res])
-
-            db.session.commit()
-            return redirect(url_for('roles'))
-        else:
-            g.myerror = "Role with this name already exists"
-    return render_template('addrole.html', title="Add Role", form=form, isedit=False, all_res=all_res, role=None)
-
-
 @app.route('/editrole/<roleid>', methods=['GET', 'POST'])
 def editrole(roleid):
     form = RoleForm()
@@ -237,29 +200,28 @@ def editrole(roleid):
         return render_template('cust_error.html', title='Role Not Found' , msg="Role you are looking for does not exist")
     else:
         all_res = Resource.query.all()
-        form.read_resources.choices = [(str(x.id), str(ActionType.READ)) for x in all_res]
-        form.write_resources.choices = [(str(x.id), str(ActionType.WRITE)) for x in all_res]
-        form.delete_resources.choices = [(str(x.id), str(ActionType.DELETE)) for x in all_res]
-
+        form.access_resources.choices = [(str(x.id), str(ActionType.ACCESS)) for x in all_res]
+        form.grant_resources.choices = [(str(x.id), str(ActionType.GRANT)) for x in all_res]
+        form.modify_resources.choices = [(str(x.id), str(ActionType.MODIFY)) for x in all_res]
+        
         if form.validate_on_submit():
-            cur_role.name = form.name.data
             my_res_act_map = dict()
             for res in all_res:
                 my_res_act_map[res] = 0
 
-            for chk in form.read_resources:
+            for chk in form.access_resources:
                 if chk.checked:
                     tmp = Resource.query.filter_by(id=int(chk.data)).first()
-                    my_res_act_map[tmp] |= ActionType.READ
-            for chk in form.write_resources:
+                    my_res_act_map[tmp] |= ActionType.ACCESS
+            for chk in form.grant_resources:
                 if chk.checked:
                     tmp = Resource.query.filter_by(id=int(chk.data)).first()
-                    my_res_act_map[tmp] |= ActionType.WRITE
+                    my_res_act_map[tmp] |= ActionType.GRANT
 
-            for chk in form.delete_resources:
+            for chk in form.modify_resources:
                 if chk.checked:
                     tmp = Resource.query.filter_by(id=int(chk.data)).first()
-                    my_res_act_map[tmp] |= ActionType.DELETE
+                    my_res_act_map[tmp] |= ActionType.MODIFY
 
             for res in my_res_act_map:
                 cur_role.change_resource_map(res, my_res_act_map[res])
@@ -323,3 +285,8 @@ def login():
             g.myerror = 'Invalid email or password.'
             flash('Invalid username or password.')
     return render_template('login.html', form=form)
+
+
+def check_admin():
+    if not g.user.isadmin:
+        return "Access denied"

@@ -16,8 +16,11 @@ class User(UserMixin, db.Model):
 
     def set_role(self, role):
         self.user_role = role
+        db.session.commit()
 
     def can(self, resource, action):
+        if self.isadmin():
+            return True
         temp_role = Role.query.filter_by(id = self.role_id).first()
         for res in temp_role.myresources:
             if res.assigned_resource == resource and (res.actions & action) == action:
@@ -57,6 +60,15 @@ class User(UserMixin, db.Model):
 
     def verify_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+    @staticmethod
+    def createadmin():
+        admin = User(name='admin', email='admin@admin.com', password='admin')
+        db.session.add(admin)
+        db.session.commit()
+
+    def isadmin(self):
+        return self.name=="admin"
 
     def __repr__(self):
         return '<User %r>' % (self.name)

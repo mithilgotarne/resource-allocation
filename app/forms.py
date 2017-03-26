@@ -26,7 +26,7 @@ class RegistrationForm(Form):
                                                          EqualTo('confirm', message='Passwords must match')])
     confirm = PasswordField('Repeat Password',
                             validators=[InputRequired(message='Confirm Password field cannot be left blank')])
-    role = SelectField('role', choices=[('1', 'Student'), ('2', 'Teacher'), ('3', 'HOD')],
+    role = SelectField('role', choices=[(1, 'Student'), (2, 'Teacher'), (3, 'HOD')],
                          validators=[InputRequired(message='Role field cannot be left blank')])
 
 class NewUserForm(Form):
@@ -44,10 +44,9 @@ class ResourceForm(Form):
     quantity = StringField('quantity', validators=[InputRequired(message='Quantity field cannot be left blank')])
 
 class RoleForm(Form):
-    name = StringField('name', validators=[InputRequired(message='Name field cannot be left blank')])
-    read_resources = MultiCheckboxField('ReadResources')
-    write_resources = MultiCheckboxField('WriteResources')
-    delete_resources = MultiCheckboxField('DeleteResources')
+    access_resources = MultiCheckboxField('AccessResources')
+    grant_resources = MultiCheckboxField('GrantResources')
+    modify_resources = MultiCheckboxField('ModifyResources')
 
 class AccessForm(Form):
     users = SelectField("users")

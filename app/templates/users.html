@@ -15,7 +15,7 @@
             <th>User ID</th>
             <th>Name</th>
             <th>Email</th>
-            <th>Roles</th>
+            <th>Role</th>
             <th></th>
         </tr>
         {% for user in users %}
@@ -27,16 +27,16 @@
                 {% for role in allroles %}
                 {% if role.id == user.role_id %}
                 <span class="label label-primary" style="font-size: 14px">{{ role.name }}</span>
-                {% else %}
-                <span class="label label-default" style="font-size: 14px">{{ role.name }}</span>
                 {% endif %}
                 {% endfor %}
             </td>
             <td align="right">
+                {% if not user.isadmin() %}
                 <div class="btn-group" role="group">
                     <a href="{{ url_for('edituser', userid=user.id) }}" role="button" class="btn btn-warning btn-md">Edit</a>
                     <a href="{{ url_for('deleteuser', userid=user.id) }}" role="button" class="btn btn-danger btn-md">Delete</a>
                 </div>
+                {% endif %}
             </td>
         </tr>
         {% endfor %}
@@ -45,7 +45,7 @@
     <h3>No users added</h3>
     {% endif %}
     <div style="text-align:center">
-        <a href="{{ url_for('registration') }}" role="button" class="btn btn-md btn-success"> Add New User</a>
+        <a href="{{ url_for('newuser') }}" role="button" class="btn btn-md btn-success"> Add New User</a>
     </div>
 </div> <!-- /container -->
 {% endblock %}

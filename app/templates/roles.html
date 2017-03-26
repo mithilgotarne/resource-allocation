@@ -13,9 +13,9 @@
             <th>{{ role.name }}
                 <div class="btn-group" role="group">
                     <a href="{{ url_for('editrole', roleid=role.id) }}" role="button" class="btn btn-warning btn-md"><i class="glyphicon glyphicon-pencil"></i></a>
-                    <a href="{{ url_for('deleterole', roleid=role.id) }}" role="button" class="btn btn-danger btn-md"><i class="glyphicon glyphicon-trash"></i></a>
                 </div>
-            </th>{% endfor %}
+            </th>
+            {% endfor %}
             <th align="right"></th>
         </tr>
         {% for res in all_res %}
@@ -25,14 +25,14 @@
             {% for role in all_roles %}
             <td>
                 {% if role.has_resource(res) and role.can(res, 1)%}
-                <span class="label label-primary" style="font-size: 14px">Read</span> {% else %}
-                <span class="label label-default" style="font-size: 14px">Read</span> {% endif %} {% if role.has_resource(res)
-                and role.can(res, 2)%}
-                <span class="label label-primary" style="font-size: 14px">Write</span> {% else %}
-                <span class="label label-default" style="font-size: 14px">Write</span> {% endif %} {% if role.has_resource(res)
-                and role.can(res, 4)%}
-                <span class="label label-primary" style="font-size: 14px">Delete</span> {% else %}
-                <span class="label label-default" style="font-size: 14px">Delete</span> {% endif %}
+                <span class="label label-primary" style="font-size: 14px">Access</span> {% else %}
+                <span class="label label-default" style="font-size: 14px">Access</span> {% endif %} 
+                {% if role.has_resource(res) and role.can(res, 2)%}
+                <span class="label label-primary" style="font-size: 14px">Grant</span> {% else %}
+                <span class="label label-default" style="font-size: 14px">Grant</span> {% endif %}
+                {% if role.has_resource(res) and role.can(res, 4)%}
+                <span class="label label-primary" style="font-size: 14px">Modify</span> {% else %}
+                <span class="label label-default" style="font-size: 14px">Modify</span> {% endif %}
             </td>
             {% endfor %}
         </tr>
@@ -43,10 +43,7 @@
         <h3>No roles added</h3>
     </div>
     {% endif %}
-    <div style="text-align:center">
-        <a href="{{ url_for('addrole') }}" role="button" class="btn btn-md btn-success" style="margin-top: 10px">
-            Add New Role</a>
-    </div>
+    
 </div>
 <!-- /container -->
 {% endblock %}

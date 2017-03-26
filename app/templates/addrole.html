@@ -9,16 +9,15 @@
         {{ form.hidden_tag() }}
 
         <label for="name" class="sr-only">Name</label>
-        {{ form.name(class="form-control", placeholder="Enter name of role..", style="margin-bottom: 5px;") }}
-
+        <h3>{{role.name}}</h3>
         {% if all_res|length > 0 %}
         <!--</div>-->
         <table class="table table-striped table-hover">
             <tr>
                 <th>Sr. No.</th>
                 <th>Resource Name</th>
-                <th>Read</th>
-                <th>Write</th>
+                <th>Access</th>
+                <th>Grant</th>
                 <th>Delete</th>
             </tr>
             {% for resource in all_res %}
@@ -63,7 +62,7 @@
     $(function(){
         {% if isedit %}
         $("#name").val("{{role.name}}");
-        {% for chk in form.read_resources %}
+        {% for chk in form.access_resources %}
             {% if role.can(all_res[chk.data|int -1], 1) %}
             $("#read{{chk.data}}").append('{{chk(checked="true")}}');
             {% else %}
@@ -71,7 +70,7 @@
             {% endif %}
         {% endfor %}
 
-        {% for chk in form.write_resources %}
+        {% for chk in form.grant_resources %}
             {% if role.can(all_res[chk.data|int -1], 2) %}
             $("#write{{chk.data}}").append('{{chk(checked="true")}}');
             {% else %}
@@ -79,7 +78,7 @@
             {% endif %}
         {% endfor %}
 
-        {% for chk in form.delete_resources %}
+        {% for chk in form.modify_resources %}
             {% if role.can(all_res[chk.data|int -1], 4) %}
             $("#delete{{chk.data}}").append('{{chk(checked="true")}}');
             {% else %}

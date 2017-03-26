@@ -7,48 +7,41 @@
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
     <meta name="description" content="">
     <meta name="author" content="">
-    <title>Asclepius - Login</title>
+    <title>Resource Allocation - Login</title>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
-    <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
 
     <!-- Latest compiled and minified JavaScript -->
     <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
 
     <!-- Custom styles for this template -->
     <link href="{{ url_for('static', filename='css/signin.css') }}" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css?family=Cinzel|Josefin+Sans" rel="stylesheet">
     <script src="{{ url_for('static', filename='jquery-3.1.0.min.js') }}"></script>
-    <script>
-			$(function(){
-				$(".container").fadeIn("slow");
-			});
-    </script>
+    
     <link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome.min.css') }}">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 
 <body>
-<div class="container" style="vertical-align: center; display: none;">
+<div class="container" style="vertical-align: center;">
 
     <div class="row" style="margin-top: 10vh;">
-        <div class="col-md-offset-4 col-md-4"
-             style="background-color: #eee; box-shadow: 0px 0px 3px 2px rgba(240,240,240,1);">
+        <div class="col-md-offset-4 col-md-4">
             <form class="form-signin" action="" method="post" name="login">
                 {{ form.hidden_tag() }}
-                <h2 class="form-signin-heading"
-                    style="font-family: 'Cinzel', serif; border-bottom: 1px solid black; padding-bottom: 5px" href="{{ url_for('index') }}"><a href="{{ url_for('index') }}" style="text-decoration: inherit; color: inherit">Asclepius</a>
-                    </h2>
-                <h2 class="form-signin-heading">Login</h2>
+                <h3 class="form-signin-heading"
+                    style="padding-bottom: 5px">Resource Allocation System
+                    </h3>
+                <h4 class="form-signin-heading">Login</h4>
 
-                <div class="input-group">
-                    <span class="input-group-addon" id="basic-addon2"><i class="fa fa-at fa-lg fa-2x"></i></span>
+                <div class="input-group", style="margin-bottom: 5px">
+                    <span class="input-group-addon" id="basic-addon1"><i class="material-icons" style="font-size: 16px">perm_identity</i></span>
                     {{ form.email(class="form-control", placeholder="Email") }}
                 </div>
 
 
-                <div class="input-group">
-                    <span class="input-group-addon" id="basic-addon2"><i class="material-icons">fingerprint</i></span>
+                <div class="input-group", style="margin-bottom: 5px">
+                    <span class="input-group-addon" id="basic-addon2"><i class="material-icons" style="font-size: 16px">fingerprint</i></span>
                     {{ form.password(class="form-control", placeholder="Password") }}
                 </div>
                 <div style="text-align: center; color: #CC0000; font-size:16px; padding: 5px 0px 10px 0px">
@@ -64,7 +57,7 @@
                     {{ g.myerror }}
                 </div>
                 <div style="text-align: center; font-size:16px; padding: 5px 0px 10px 0px">
-                    <a href="{{ url_for('registration')}}">Click here to register</a>
+                    <a href="{{ url_for('newuser')}}">Click here to register</a>
                 </div>
 
                 <button class="btn btn-lg btn-primary btn-block" style="margin: 10px 0px 10px 0px;" type="submit"
