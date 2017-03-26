@@ -22,8 +22,22 @@ class MultiCheckboxField(SelectMultipleField):
 class RegistrationForm(Form):
     name = StringField('name', validators=[InputRequired(message='Name field cannot be left blank')])
     email = EmailField('email', validators=[Email(), InputRequired(message='Email field cannot be left blank')])
-    user_roles = MultiCheckboxField('Roles')
+    password = PasswordField('New Password', validators=[InputRequired(message='Password field cannot be left blank'),
+                                                         EqualTo('confirm', message='Passwords must match')])
+    confirm = PasswordField('Repeat Password',
+                            validators=[InputRequired(message='Confirm Password field cannot be left blank')])
+    role = SelectField('role', choices=[('1', 'Student'), ('2', 'Teacher'), ('3', 'HOD')],
+                         validators=[InputRequired(message='Role field cannot be left blank')])
 
+class NewUserForm(Form):
+    name = StringField('name', validators=[InputRequired(message='Name field cannot be left blank')])
+    email = EmailField('email', validators=[Email(), InputRequired(message='Email field cannot be left blank')])
+    password = PasswordField('New Password', validators=[InputRequired(message='Password field cannot be left blank'),
+                                                         EqualTo('confirm', message='Passwords must match')])
+    confirm = PasswordField('Repeat Password',
+                            validators=[InputRequired(message='Confirm Password field cannot be left blank')])
+    role = SelectField('role', choices=[('1', 'Student'), ('2', 'Teacher'), ('3', 'HOD')],
+                         validators=[InputRequired(message='Role field cannot be left blank')])
 
 class ResourceForm(Form):
     name = StringField('name', validators=[InputRequired(message='Name field cannot be left blank')])
@@ -39,3 +53,12 @@ class AccessForm(Form):
     users = SelectField("users")
     resources = SelectField("resources")
     actions = SelectField("actions")
+
+
+class LoginForm(Form):
+    email = EmailField('Email', validators=[Email(message='Invalid Email format'),
+                                            InputRequired(message='Email field cannot be left blank'), Length(1, 64)])
+    password = PasswordField('Password', validators=[InputRequired('Password field cannot be left blank')])
+    remember_me = BooleanField('Keep me logged in')
+    submit = SubmitField('Log In')
+

@@ -32,45 +32,53 @@ def index():
 
 
 # Users
-@app.route('/users/', methods=['GET', 'POST'])
+@app.route('/users', methods=['GET', 'POST'])
 def users():
     users = User.query.all()
     all_roles = Role.query.all()
     return render_template('users.html', title="Users", users=users, allroles=all_roles)
 
 
+@app.route('/newuser', methods=['GET', 'POST'])
+def newuser():
+    form = NewUserForm()
+    g.myerror = ""
+    if form.validate_on_submit():
+        u = User(name=form.name.data, email=form.email.data)
+        u.password = form.password.data
+        flash(form.role.data)
+        temp = Role.query.filter_by(id=int(form.role.data)).first()
+        db.session.add(u)
+        u.set_role(temp)
+        db.session.commit()
+        checkuser = User.query.filter_by(email=form.email.data).first()
+        if checkuser is None:
+            #db.session.commit()
+            flash('Registration Successful')
+            flash(form.role.data)
+            return redirect(url_for('users'))
+        else:
+            g.myerror = "This user already exists"
+    return render_template('newuser.html', form=form)
+
+
 @app.route('/registration', methods=['GET', 'POST'])
 def registration():
     form = RegistrationForm()
     all_roles = Role.query.all()
-    form.user_roles.choices = [(str(x.id), x.name) for x in all_roles]
     if len(all_roles) > 0:
         noroles = False
         g.myerror = ""
         if form.validate_on_submit():
-            selected_roles.clear()
-
-            for myrole in form.user_roles:
-                if myrole.checked:
-                    selected_roles.append(myrole.data)
-
             u = User(name=form.name.data, email=form.email.data)
             checkuser = User.query.filter_by(email=form.email.data).first()
             if checkuser is None:
                 db.session.add(u)
-
-                if len(selected_roles) > 0:
-                    for role in selected_roles:
-                        u.add_role(Role.query.filter_by(id=role).first())
-                    db.session.commit()
-                    return redirect(url_for("users"))
-                else:
-                    g.myerror = "You must select at least one role"
+                db.session.commit()
+                return redirect(url_for("users"))
             else:
                 g.myerror = "This user already exists"
-    else:
-        noroles = True
-    return render_template('registration.html', title="Add User", form=form, isedit=False, cur_roles=[], user=None, noroles=noroles)
+    return render_template('registration.html', title="Add User", form=form)
 
 
 @app.route('/edituser/<userid>', methods=['GET', 'POST'])
@@ -286,3 +294,32 @@ def internal_error(error):
 def internal_error(error):
     db.session.rollback()
     return render_template('400.html', title='400 Error', msg='400 Server Error'), 400
+
+
+@app.before_request
+def before_request():
+    g.user = current_user
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('You have been logged out')
+    return redirect(url_for('index'))
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    g.myerror = "";
+    if g.user is not None and g.user.is_authenticated:
+        return redirect(url_for('index'))
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user is not None and user.verify_password(form.password.data):
+            login_user(user, form.remember_me.data)
+            return redirect(url_for('index'))
+        else:
+            g.myerror = 'Invalid email or password.'
+            flash('Invalid username or password.')
+    return render_template('login.html', form=form)

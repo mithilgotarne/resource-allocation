@@ -12,9 +12,10 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, index=True)
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     rl_user = db.relationship('RequestLog', backref='rl_user', lazy='dynamic')
-    
+    password_hash = db.Column(db.String(128))
+
     def set_role(self, role):
-        self.role_id = role
+        self.user_role = role
 
     def can(self, resource, action):
         temp_role = Role.query.filter_by(id = self.role_id).first()
@@ -45,6 +46,17 @@ class User(UserMixin, db.Model):
                 rlog = RequestLog.query.filter(and_(RequestLog.res_id==resource.id, RequestLog.status=="Pending", RequestLog.user_id == requester.id )).first()
                 rlog.status = "Granted"
                 db.session.commit()
+
+    @property
+    def password(self):
+        raise AttributeError('password is not a readable attribute')
+
+    @password.setter
+    def password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def verify_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
         return '<User %r>' % (self.name)
