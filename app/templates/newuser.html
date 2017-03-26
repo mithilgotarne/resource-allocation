@@ -21,7 +21,36 @@
   </head>
 
   <body>
+<div class="container">
 
+{% if g.user.is_authenticated and g.user.name=="admin" %}
+      <!-- Static navbar -->
+      <nav class="navbar navbar-default">
+        <div class="container-fluid">
+          <div class="navbar-header">
+            
+            <span class="navbar-brand">Resource Allocation System</span>
+          </div>
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+              <li><a href="{{url_for('allrequests')}}">Request Log</a></li>
+              <li><a href="{{url_for('users')}}">Users</a></li>
+              <li><a href="{{url_for('resources')}}">Resources</a></li>
+              <li><a href="{{url_for('roles')}}">Roles</a></li>
+
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li><a style="padding-right:0px" disabled="disabled">{{ g.user.name }}</a></li>
+                <li><a style="padding-right:0px" disabled="disabled">|</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+            
+          </div><!--/.nav-collapse -->
+        </div><!--/.container-fluid -->
+      </nav>
+
+            {% endif %}
+    </div>
 <div class="container" style="vertical-align: center; max-width:500px;">
 
     {% if noroles %}

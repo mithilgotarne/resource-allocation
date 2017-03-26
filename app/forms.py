@@ -49,10 +49,8 @@ class RoleForm(Form):
     modify_resources = MultiCheckboxField('ModifyResources')
 
 class AccessForm(Form):
-    users = SelectField("users")
     resources = SelectField("resources")
-    actions = SelectField("actions")
-
+    reason = StringField('reason', validators=[InputRequired(message='Reason field cannot be left blank')])
 
 class LoginForm(Form):
     email = EmailField('Email', validators=[Email(message='Invalid Email format'),

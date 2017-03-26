@@ -3,6 +3,7 @@ from flask import render_template, flash, redirect, url_for, request, g, jsonify
 from flask_login import login_required, current_user, logout_user, login_user
 from .forms import *
 from .models import *
+from .decorators import *
 
 selected_roles = list()
 
@@ -12,32 +13,131 @@ selected_roles = list()
 def index():
     if not g.user.is_authenticated:
         return redirect(url_for('login'))
-    form = AccessForm()
-    all_users = User.query.all()
-    all_res = Resource.query.all()
-    form.users.choices = [(str(x.id), str(x.name)) for x in all_users]
-    form.resources.choices = [(str(x.id), str(x.name)) for x in all_res]
-    form.actions.choices = [(str(ActionType.ACCESS), "Read"), (str(ActionType.GRANT), "Write"),
-                            (str(ActionType.MODIFY), "Delete")]
-    isempty = False
-    if len(all_res) == 0 or len(all_users) == 0:
-        isempty = True
-    if form.validate_on_submit():
-        u = User.query.filter_by(id=int(form.users.data)).first()
-        r = Resource.query.filter_by(id=int(form.resources.data)).first()
-        a = int(form.actions.data)
-        if (u.can(r, a)):
-            g.acc_status = "true"
-        else:
-            g.acc_status = "false"
-    return render_template('index.html', form=form, title="Access Check", isempty=isempty)
+    if g.user.name=="admin":
+        return redirect(url_for('allrequests'))
+    else:
+        return redirect(url_for('access'))
 
+@app.route('/myrequests', methods=['GET', 'POST'])
+@login_required
+@normal_required
+def myrequests():
+    rlog_all = RequestLog.query.filter_by(user_id=g.user.id).all()
+    res = list()
+    timestamp = list()
+    reason = list()
+    status = list()
+    count = len(rlog_all)
+
+    for i in rlog_all:
+        res.append(Resource.query.filter_by(id=i.res_id).first())
+        timestamp.append(i.timestamp)
+        reason.append(i.reason)
+        status.append(i.status)
+
+    return render_template('myrequests.html', res=res, timestamp=timestamp, reason=reason, status=status, count=count)
+
+@app.route('/pendingrequests', methods=['GET', 'POST'])
+@login_required
+@normal_required
+def pendingrequests():
+    rlog_all = RequestLog.query.filter_by(status="Pending").all()
+    users = list()
+    res = list()
+    timestamp = list()
+    reason = list()
+
+    for i in rlog_all:
+        temp_user = User.query.filter_by(id = i.user_id).first()
+        temp_res = Resource.query.filter_by(id = i.res_id).first() 
+        if temp_user.role_id < g.user.role_id and g.user.can(temp_res, ActionType.GRANT):
+            users.append(temp_user)
+            res.append(temp_res)
+            timestamp.append(i.timestamp)
+            reason.append(i.reason)
+
+    return render_template('pendingrequests.html', res=res, timestamp=timestamp, reason=reason, users=users, count=len(reason))
+
+
+@app.route('/access', methods=['GET', 'POST'])
+@login_required
+@normal_required
+def access():
+    form = AccessForm()
+    form.resources.choices = [(str(x.id), x.name) for x in Resource.query.all()]
+    if form.validate_on_submit():
+        myres = Resource.query.filter_by(id=int(form.resources.data)).first()
+        g.req_status = g.user.get_access(myres, form.reason.data)
+    return render_template('access.html', form = form)
+
+@app.route('/retresource/<resid>', methods=['GET', 'POST'])
+@login_required
+@normal_required
+def retresource(resid):
+    resid = int(resid)
+    tempr = Resource.query.filter_by(id=resid).first()
+    if tempr is not None:
+        g.user.release_access(tempr)
+        db.session.commit()
+    return redirect(url_for("myrequests"))
+
+
+@app.route('/declineresource/<int:resid>/<int:userid>', methods=['GET', 'POST'])
+@login_required
+@normal_required
+def declineresource(resid, userid):
+    resid = int(resid)
+    userid = int(userid)
+    tempr = Resource.query.filter_by(id=resid).first()
+    tempu = User.query.filter_by(id=userid).first()
+    if tempr is not None and tempu is not None:
+        g.user.deny_resource(tempr, tempu)
+        db.session.commit()
+    return redirect(url_for("pendingrequests"))
+
+
+@app.route('/approveresource/<int:resid>/<int:userid>', methods=['GET', 'POST'])
+@login_required
+@normal_required
+def approveresource(resid, userid):
+    resid = int(resid)
+    userid = int(userid)
+    tempr = Resource.query.filter_by(id=resid).first()
+    tempu = User.query.filter_by(id=userid).first()
+    if tempr is not None and tempu is not None:
+        g.user.approve_resource(tempr, tempu)
+        db.session.commit()
+    return redirect(url_for("pendingrequests"))
+
+@app.route('/allrequests')
+@login_required
+@admin_required
+def allrequests():
+    rlog_all = RequestLog.query.all()
+    res = list()
+    roles = list()
+    users = list()
+    timestamp = list()
+    reason = list()
+    status = list()
+    count = len(rlog_all)
+
+    for i in rlog_all:
+        cur_user = User.query.filter_by(id=i.user_id).first()
+        res.append(Resource.query.filter_by(id=i.res_id).first().name)
+        roles.append(Role.query.filter_by(id=cur_user.role_id).first().name)
+        users.append(cur_user.name)
+        timestamp.append(i.timestamp)
+        reason.append(i.reason)
+        status.append(i.status)
+
+    return render_template('allrequests.html', users=users, res=res, timestamp=timestamp, reason=reason, status=status, count=count, roles=roles)
 
 # Users
 @app.route('/users', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def users():
-    check_admin()
     users = User.query.all()
     all_roles = Role.query.all()
     return render_template('users.html', title="Users", users=users, allroles=all_roles)
@@ -57,72 +157,13 @@ def newuser():
             u.set_role(temp)
             db.session.add(u)
             db.session.commit()
-            if g.user.isadmin:
+            if g.user.is_authenticated and g.user.isadmin():
                 return redirect(url_for('users'))
             else:
                 return redirect(url_for('login'))
         else:
             g.myerror = "This user already exists"
     return render_template('newuser.html', form=form)
-
-
-@app.route('/registration', methods=['GET', 'POST'])
-def registration():
-    form = RegistrationForm()
-    all_roles = Role.query.all()
-    if len(all_roles) > 0:
-        noroles = False
-        g.myerror = ""
-        if form.validate_on_submit():
-            u = User(name=form.name.data, email=form.email.data)
-            checkuser = User.query.filter_by(email=form.email.data).first()
-            if checkuser is None:
-                db.session.add(u)
-                db.session.commit()
-                return redirect(url_for("users"))
-            else:
-                g.myerror = "This user already exists"
-    return render_template('registration.html', title="Add User", form=form)
-
-
-@login_required
-@app.route('/edituser/<userid>', methods=['GET', 'POST'])
-def edituser(userid):
-    form = RegistrationForm()
-    all_roles = Role.query.all()
-    userid = int(userid)
-    cur_user = User.query.filter_by(id=userid).first()
-    if cur_user is None:
-        return render_template('cust_error.html', title='User Not Found', msg="User you are looking for does not exist")
-    else:
-        form.user_roles.choices = [(str(x.id), x.name) for x in all_roles]
-        g.myerror = ""
-
-        # Populate fields with existing data
-        cur_roles = [str(x.id) for x in cur_user.roles]
-        if form.validate_on_submit():
-            selected_roles.clear()
-
-            for myrole in form.user_roles:
-                if myrole.checked:
-                    selected_roles.append(int(myrole.data))
-
-            if len(selected_roles) > 0:
-                for role in all_roles:
-                    if role.id in selected_roles:
-                        if not cur_user.has_role(role):
-                            cur_user.add_role(role)
-                    else:
-                        if cur_user.has_role(role):
-                            cur_user.remove_role(role)
-                cur_user.email = form.email.data
-                cur_user.name = form.name.data
-                db.session.commit()
-                return redirect(url_for("users"))
-            else:
-                g.myerror = "You must select at least one role"
-        return render_template('registration.html', title="Edit User", form=form, isedit=True, cur_roles=cur_roles,
-                               user=cur_user)
 
 
 @app.route('/deleteuser/<userid>', methods=['GET', 'POST'])
@@ -285,8 +326,3 @@ def login():
             g.myerror = 'Invalid email or password.'
             flash('Invalid username or password.')
     return render_template('login.html', form=form)
-
-
-def check_admin():
-    if not g.user.isadmin:
-        return "Access denied"

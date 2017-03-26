@@ -28,13 +28,17 @@ class User(UserMixin, db.Model):
         return False
     
     def get_access(self, resource, reason):
-        has_access = "Pending"
-        if self.can(resource, ActionType.ACCESS):
-            has_access = "Granted"
-            resource.decrement()
+        if resource.in_stock():
+            has_access = "Pending"
+            if self.can(resource, ActionType.ACCESS):
+                has_access = "Granted"
+                resource.decrement()
+        else:
+            has_access = "Denied"
         temp_log = RequestLog(rl_user=self, rl_res=resource, timestamp=datetime.now(), reason=reason, status=has_access)
         db.session.add(temp_log)
         db.session.commit()
+        return has_access
     
     def release_access(self, resource):
         rlog = RequestLog.query.filter(and_(RequestLog.res_id==resource.id, RequestLog.user_id == self.id)).first()
@@ -47,7 +51,16 @@ class User(UserMixin, db.Model):
         if self.can(resource, ActionType.GRANT):
             if self.role_id > requester.role_id:
                 rlog = RequestLog.query.filter(and_(RequestLog.res_id==resource.id, RequestLog.status=="Pending", RequestLog.user_id == requester.id )).first()
+                res = Resource.query.filter_by(id=resource.id).first()
+                res.decrement()
                 rlog.status = "Granted"
+                db.session.commit()
+    
+    def deny_resource(self, resource, requester):
+        if self.can(resource, ActionType.GRANT):
+            if self.role_id > requester.role_id:
+                rlog = RequestLog.query.filter(and_(RequestLog.res_id==resource.id, RequestLog.status=="Pending", RequestLog.user_id == requester.id )).first()
+                rlog.status = "Denied"
                 db.session.commit()
 
     @property

@@ -28,18 +28,25 @@
       <nav class="navbar navbar-default">
         <div class="container-fluid">
           <div class="navbar-header">
-{% if g.user.is_authenticated and g.user.name=="admin" %}
-            
-            <a class="navbar-brand" href="{{ url_for('index') }}">Resource Allocator System</a>
+          {% if g.user.is_authenticated %}
+            <span class="navbar-brand">Resource Allocation System</span>
           </div>
+          
           <div id="navbar" class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
-              <!--li><a href="{{url_for('index')}}">Access Check</a></li-->
+            {% if g.user.name == "admin" %}
+              <li><a href="{{url_for('allrequests')}}">All Requests Log</a></li>
               <li><a href="{{url_for('users')}}">Users</a></li>
               <li><a href="{{url_for('resources')}}">Resources</a></li>
               <li><a href="{{url_for('roles')}}">Roles</a></li>
-
+            {% else %}
+              <li><a href="{{url_for('access')}}">Access Resource</a></li>
+              {% if g.user.role_id > 1 %}<li><a href="{{url_for('pendingrequests')}}">Pending Requests</a></li>{% endif %}
+              <li><a href="{{url_for('myrequests')}}">Requests Log</a></li>
+              <li><a href="{{url_for('resources')}}">Resources</a></li>
+            {% endif %}
             </ul>
+            
             <ul class="nav navbar-nav navbar-right">
                 <li><a style="padding-right:0px" disabled="disabled">{{ g.user.name }}</a></li>
                 <li><a style="padding-right:0px" disabled="disabled">|</a></li>

@@ -1,0 +1,50 @@
+{% extends "base.html" %} 
+{% block content %}
+<div class="container" style="vertical-align: center;">
+    
+    <div style="text-align:center">
+    <h2>Request Log</h2>
+    </div>
+    <hr>
+    {% if count > 0 %}
+
+    <!--</div>-->
+    <table class="table table-striped table-hover">
+        <tr>
+            <th>User</th>
+            <th>Role</th>
+            <th>Resource</th>
+            <th>Timestamp</th>
+            <th>Reason</th>
+            <th>Status</th>
+        </tr>
+        {% set i = 0 %}
+        {% for user in users %}
+        <tr>
+            <td>{{ user }}</td>
+            <td>
+                <span class="label label-primary" style="font-size: 14px">{{ roles[i] }}</span>
+            </td>
+            <td>{{ res[i]}}</td>
+            <td>{{ timestamp[i] }}</td>
+            <td>{{ reason[i]}}</td>
+            <td>
+                {% if status[i] == "Granted" %}
+                <span class="label label-success" style="font-size: 14px">{{ status[i]}}</span>
+                {% elif status[i] == "Pending" %}
+                <span class="label label-warning" style="font-size: 14px">{{ status[i]}}</span>
+                {% elif status[i] == "Declined" %}
+                <span class="label label-danger" style="font-size: 14px">{{ status[i]}}</span>
+                {% elif status[i] == "Returned" %}
+                <span class="label label-primary" style="font-size: 14px">{{ status[i]}}</span>
+                {% endif %}
+            </td>
+            {% set i = i + 1 %}
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <h3>No requests logged</h3>
+    {% endif %}
+</div>
+{% endblock %}

@@ -20,11 +20,13 @@
             <td>{{ resource.name }}</td>
             <td>{{ resource.quantity }}</td>
             <td align="right">
+                {% if g.user.can(resource, 4) %}
                 <div class="btn-group" role="group">
                     <a href="{{ url_for('editresource', resid=resource.id) }}" role="button" class="btn btn-warning btn-md">Edit</a>
                     <a href="{{ url_for('deleteresource', resid=resource.id) }}" role="button"
                        class="btn btn-danger btn-md">Delete</a>
                 </div>
+                {% endif %}
             </td>
         </tr>
         {% endfor %}
@@ -34,9 +36,11 @@
         <h3>No resources added</h3>
     </div>
     {% endif %}
+    {% if g.user.isadmin() %}
     <div style="text-align:center">
         <a href="{{ url_for('addresource') }}" role="button" class="btn btn-md btn-success" style="margin-top: 10px">
             Add New Resource</a>
     </div>
+    {% endif %}
 </div> <!-- /container -->
 {% endblock %}

@@ -1,8 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container" style="vertical-align: center; ">
-    <!--<div class="page-header">-->
-
+    
     <div style="text-align:center">
     <h2>Users</h2>
     </div>
@@ -33,7 +32,6 @@
             <td align="right">
                 {% if not user.isadmin() %}
                 <div class="btn-group" role="group">
-                    <a href="{{ url_for('edituser', userid=user.id) }}" role="button" class="btn btn-warning btn-md">Edit</a>
                     <a href="{{ url_for('deleteuser', userid=user.id) }}" role="button" class="btn btn-danger btn-md">Delete</a>
                 </div>
                 {% endif %}
